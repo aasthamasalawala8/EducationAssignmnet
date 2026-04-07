@@ -1,0 +1,152 @@
+@page "/admin-dashboard"
+@page "/admin"
+@layout AdminLayout
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin")]
+
+@using EducationAssignmentPortal.Components.Layout
+@using EducationAssignmentPortal.Services
+@using EducationAssignmentPortal.Models
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject UserService UserService
+@inject NavigationManager Navigation
+
+<div class="container-fluid">
+    <AuthorizeView Roles="Admin">
+        <Authorized>
+            <div class="welcome-banner shadow-lg">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-2">System Administration</h1>
+                        <p class="lead opacity-75">Global oversight of users, courses, and platform metrics.</p>
+                    </div>
+                    <div class="d-none d-lg-block">
+                        <i class="bi bi-shield-lock-fill display-1 opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUICK STATS -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="modern-card text-center">
+                        <div class="stat-icon bg-blue-soft text-primary mx-auto">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h5 class="text-muted small uppercase fw-bold">Total Registered Users</h5>
+                        <h1 class="display-4 fw-bold mb-3">@totalUsers</h1>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="modern-card text-center">
+                        <div class="stat-icon bg-warning-soft text-warning mx-auto">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h5 class="text-muted small uppercase fw-bold">Pending Faculty Approvals</h5>
+                        <h1 class="display-4 fw-bold mb-3">@pendingFaculty</h1>
+                    </div>
+                </div>
+            </div>
+
+            <!-- USER MANAGEMENT -->
+            <div class="modern-card">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">User Directory</h4>
+                    <span class="badge-m badge-info-m">Active System Directory</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Identity</th>
+                                <th>Access Level</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                           @foreach (var user in users)
+                           {
+                                <tr>
+                                    <td>
+                                        <div class="fw-bold">@user.Name</div>
+                                        <div class="small text-muted">@user.Email</div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@user.Role</span>
+                                    </td>
+                                    <td>
+                                        @if(user.IsApproved) {
+                                            <span class="badge-m badge-success-m">Verified</span>
+                                        } else {
+                                            <span class="badge-m badge-warning-m">Pending</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        @if (user.Role == "Faculty" && !user.IsApproved)
+                                        {
+                                            <button class="btn btn-sm btn-success btn-modern me-2"
+                                                    @onclick="() => ApproveFaculty(user.Id)">
+                                                Approve
+                                            </button>
+                                        }
+
+                                        <button class="btn btn-sm btn-outline-danger btn-modern"
+                                                @onclick="() => DeleteUser(user.Id)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                           }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+</div>
+
+<style>
+    .badge-info-m { background: #e0f2fe; color: #075985; }
+</style>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
+
+    private List<User> users = new();
+    private int totalUsers;
+    private int pendingFaculty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true && user.IsInRole("Admin"))
+        {
+            LoadData();
+        }
+    }
+
+    private void LoadData()
+    {
+        users = UserService.GetAllUsers();
+        totalUsers = users.Count;
+        pendingFaculty = users
+            .Count(u => u.Role == "Faculty" && u.IsApproved == false);
+    }
+
+    private void ApproveFaculty(int id)
+    {
+        UserService.ApproveFaculty(id);
+        LoadData();
+    }
+
+    private void DeleteUser(int id)
+    {
+        UserService.DeleteUser(id);
+        LoadData();
+    }
+}

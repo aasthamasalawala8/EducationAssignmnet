@@ -1,0 +1,106 @@
+@page "/faculty/add-assignment"
+@page "/faculty/addassignment"
+@page "/add-assignment"
+@layout FacultyLayout
+@attribute [Authorize(Roles = "Faculty")]
+@rendermode @(new InteractiveServerRenderMode(prerender: false))
+
+@using EducationAssignmentPortal.Components.Layout
+@using EducationAssignmentPortal.Models
+@using EducationAssignmentPortal.Services
+@using System.Security.Claims
+
+@inject AssignmentService AssignmentService
+@inject CourseService CourseService
+@inject NavigationManager Navigation
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h3 class="mb-0">Add Assignment</h3>
+        </div>
+        <div class="card-body">
+            <EditForm Model="@assignment" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" />
+
+                <!-- COURSE DROPDOWN -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Select Course:</label>
+                    <InputSelect class="form-select" @bind-Value="assignment.CourseId">
+                        <option value="0">-- Select Course --</option>
+                        @foreach (var course in courses)
+                        {
+                            <option value="@course.Id">@course.CourseName (@course.CourseCode)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => assignment.CourseId)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Assignment Title:</label>
+                    <InputText class="form-control" @bind-Value="assignment.Title" placeholder="Enter assignment title" />
+                    <ValidationMessage For="@(() => assignment.Title)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Description:</label>
+                    <InputTextArea class="form-control" @bind-Value="assignment.Description" rows="4" placeholder="Enter assignment details" />
+                    <ValidationMessage For="@(() => assignment.Description)" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Due Date:</label>
+                    <InputDate class="form-control" @bind-Value="assignment.DueDate" />
+                    <ValidationMessage For="@(() => assignment.DueDate)" />
+                </div>
+
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle me-2"></i> Create Assignment
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
+
+    private Assignment assignment = new Assignment { DueDate = DateTime.Today.AddDays(7) };
+    private List<Course> courses = new();
+    private string facultyEmail = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            facultyEmail = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
+            var userIdStr = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (int.TryParse(userIdStr, out int facultyId))
+            {
+                courses = CourseService.GetCoursesByFaculty(facultyId);
+            }
+        }
+    }
+
+    async Task HandleSubmit()
+    {
+        if (assignment.CourseId == 0)
+        {
+            // Optional: Handle validation for course not selected if not already handled by DataAnnotations
+            return;
+        }
+
+        assignment.FacultyEmail = facultyEmail;
+        await AssignmentService.AddAssignmentAsync(assignment);
+        
+        Navigation.NavigateTo("/faculty/dashboard");
+    }
+}

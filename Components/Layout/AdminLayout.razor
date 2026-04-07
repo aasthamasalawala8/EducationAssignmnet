@@ -1,0 +1,67 @@
+@using EducationAssignmentPortal.Services
+@inject NavigationManager Navigation
+@inject UserService UserService
+@inherits LayoutComponentBase
+
+<div class="admin-container">
+
+    <!-- Sidebar -->
+    <div class="admin-sidebar">
+        <h4 class="admin-title">Admin Panel</h4>
+
+        <nav class="admin-nav">
+            <NavLink href="/admin/courses" class="admin-link">
+                <i class="bi bi-mortarboard me-2"></i> Courses
+            </NavLink>
+
+            <NavLink href="/admin/reports" class="admin-link">
+                <i class="bi bi-graph-up me-2"></i> Reports
+            </NavLink>
+
+            <NavLink href="/admin/users" class="admin-link">
+                <i class="bi bi-people me-2"></i> Users
+            </NavLink>
+
+             <button class="btn btn-danger mt-3"
+			@onclick="ShowLogoutConfirmation">
+        Logout
+    </button>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-content">
+        @Body
+    </div>
+
+</div>
+
+<ConfirmationModal 
+    IsVisible="isLogoutConfirmVisible" 
+    Title="Logout Confirmation" 
+    Message="Are you sure you want to logout?"
+    YesButtonText="Yes"
+    NoButtonText="No"
+    OnConfirm="PerformLogout"
+    OnCancel="CancelLogout" />
+
+@inject AuthenticationStateProvider AuthStateProvider
+
+@code {
+    private bool isLogoutConfirmVisible = false;
+
+    private void ShowLogoutConfirmation() => isLogoutConfirmVisible = true;
+    private void CancelLogout() => isLogoutConfirmVisible = false;
+
+    async Task PerformLogout()
+    {
+        isLogoutConfirmVisible = false;
+        var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+        await customAuthStateProvider.UpdateAuthenticationState(null);
+        Navigation.NavigateTo("/login?logout=true"); // Redirect to login page after logout
+    }
+
+    // Keep the original Logout method for compatibility (though renamed to PerformLogout)
+    async Task Logout() => await PerformLogout();
+}
+

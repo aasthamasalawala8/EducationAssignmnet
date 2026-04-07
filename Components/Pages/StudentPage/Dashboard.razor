@@ -1,0 +1,184 @@
+@layout StudentLayout
+@page "/student-dashboard"
+@page "/student"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Student")]
+
+@using EducationAssignmentPortal.Components.Layout
+@using EducationAssignmentPortal.Models
+@using EducationAssignmentPortal.Services
+@using Microsoft.AspNetCore.Components.Authorization
+
+@inject AssignmentService AssignmentService
+@inject NavigationManager Navigation
+
+<div class="container-fluid">
+    <AuthorizeView Roles="Student">
+        <Authorized>
+            <div class="welcome-banner shadow-lg">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-2">Hello, @context.User.Identity?.Name!</h1>
+                        <p class="lead opacity-75">You have @Pending pending assignments to complete. Keep it up!</p>
+                    </div>
+                    <div class="d-none d-lg-block">
+                        <i class="bi bi-person-workspace display-1 opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    <!-- STATISTICS CARDS -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-blue-soft text-primary mx-auto">
+                    <i class="bi bi-journal-check"></i>
+                </div>
+                <h5 class="text-muted small uppercase fw-bold">Total Assignments</h5>
+                <h2 class="fw-bold mb-0">@Total</h2>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-green-soft text-success mx-auto">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <h5 class="text-muted small uppercase fw-bold">Submitted</h5>
+                <h2 class="fw-bold mb-0">@Completed</h2>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-warning-soft text-warning mx-auto">
+                    <i class="bi bi-hourglass-split"></i>
+                </div>
+                <h5 class="text-muted small uppercase fw-bold">Pending</h5>
+                <h2 class="fw-bold mb-0">@Pending</h2>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-purple-soft text-accent mx-auto">
+                    <i class="bi bi-percent"></i>
+                </div>
+                <h5 class="text-muted small uppercase fw-bold">Completion Rate</h5>
+                <h2 class="fw-bold mb-0">@Percent%</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <!-- COMPLETION PROGRESS -->
+        <div class="col-lg-6">
+            <div class="modern-card h-100">
+                <h5 class="fw-bold mb-4"><i class="bi bi-graph-up-arrow me-2 text-primary"></i> Academic Progress</h5>
+                <div class="text-center mb-4">
+                    <div class="display-3 fw-bold text-primary">@Percent%</div>
+                    <div class="text-muted">Assignments Finished</div>
+                </div>
+                <div class="progress" style="height: 12px; border-radius: 6px;">
+                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: @Percent%">@Percent%</div>
+                </div>
+                <div class="d-flex justify-content-between mt-3 px-1">
+                    <span class="small fw-bold">0%</span>
+                    <span class="small text-muted">@Completed of @Total Done</span>
+                    <span class="small fw-bold">100%</span>
+                </div>
+                <div class="mt-4">
+                    <button class="btn btn-modern btn-primary-m w-100" @onclick="GoToAssignments">
+                        Review All Assignments <i class="bi bi-arrow-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- UPCOMING DEADLINES -->
+        <div class="col-lg-6">
+            <div class="modern-card h-100">
+                <h5 class="fw-bold mb-4"><i class="bi bi-clock me-2 text-danger"></i> Urgent Deadlines</h5>
+                @if (Upcoming.Count == 0)
+                {
+                    <div class="text-center py-5">
+                        <i class="bi bi-check-circle-fill text-success display-1 opacity-25"></i>
+                        <p class="text-muted mt-3">You're all caught up! No urgent assignments.</p>
+                    </div>
+                }
+                else
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var item in Upcoming)
+                        {
+                            <div class="list-group-item px-0 py-3 border-0 border-bottom bg-transparent">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="fw-bold">@item.Title</div>
+                                        <div class="small text-muted">Ref: ASSGN-@item.Id</div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="badge-m badge-danger-m mb-1">Due @item.DueDate?.ToShortDateString()</div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
+
+    private List<Assignment> assignments = new();
+
+    private int Total => assignments?.Count ?? 0;
+
+    private int Completed => 
+        assignments?.Count(a => a.Status == "Completed") ?? 0;
+
+    private int Pending => 
+        assignments?.Count(a => a.Status != "Completed") ?? 0;
+
+    private int Percent =>
+        Total == 0 ? 0 : (Completed * 100) / Total;
+
+    private List<Assignment> Upcoming =>
+        assignments?
+            .Where(a => a.Status != "Completed"
+                        && a.DueDate.HasValue
+                        && a.DueDate.Value >= DateTime.Today)
+            .OrderBy(a => a.DueDate)
+            .Take(5)
+            .ToList()
+        ?? new List<Assignment>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var authState = await authenticationStateTask;
+            var user = authState.User;
+
+            if (user.Identity?.IsAuthenticated == true)
+            {
+                assignments = await AssignmentService.GetAllAssignments();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    void GoToAssignments()
+    {
+        Navigation.NavigateTo("/student/assignments");
+    }
+}

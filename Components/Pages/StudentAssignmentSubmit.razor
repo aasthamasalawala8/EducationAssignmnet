@@ -8,49 +8,82 @@
     <div class="submit-card">
 
         <div class="submit-header">
-            <h1>Submit Assignment</h1>
-            <p>Upload your assignment file</p>
+            <div class="submit-icon">
+                <i class="bi bi-cloud-arrow-up-fill"></i>
+            </div>
+
+            <div>
+                <h1>Submission Page</h1>
+                <p>Upload your assignment file with comments</p>
+            </div>
         </div>
 
-        <label class="upload-box">
+        <div class="upload-container">
 
-            <InputFile OnChange="HandleUpload" class="hidden-input" />
+            <div class="upload-header">
+                <h3>
+                    <i class="bi bi-upload"></i>
+                    Submit Assignment
+                </h3>
 
-            <i class="bi bi-cloud-upload upload-icon"></i>
-
-            <h4>Choose File</h4>
-
-            <span>PDF, DOC, DOCX, ZIP</span>
-
-        </label>
-
-        @if (!string.IsNullOrEmpty(FileName))
-        {
-            <div class="file-box">
-                <i class="bi bi-file-earmark-check-fill"></i>
-                <span>@FileName (@FileSize MB)</span>
+                <div class="upload-tabs">
+                    <span class="active-tab">Upload</span>
+                    <span>History</span>
+                    <span>Help</span>
+                </div>
             </div>
-        }
 
-        <textarea class="comment-box"
-                  @bind="Comments"
-                  placeholder="Add comments...">
-        </textarea>
+            <label class="upload-box">
 
-        <button class="submit-btn"
-                @onclick="SubmitAssignment">
+                <InputFile OnChange="HandleUpload" class="hidden-input" />
 
-            <i class="bi bi-send-fill"></i>
-            Submit Assignment
+                <i class="bi bi-file-earmark-arrow-up-fill upload-big-icon"></i>
 
-        </button>
+                <p>Drag & drop files here or click to browse</p>
+                <small>Supported: PDF, DOC, DOCX, ZIP (max 50MB)</small>
 
-        @if (!string.IsNullOrEmpty(Message))
-        {
-            <div class="message-box">
-                @Message
+            </label>
+
+            @if (!string.IsNullOrEmpty(FileName))
+            {
+                <div class="uploaded-file">
+                    <div class="file-left">
+                        <i class="bi bi-file-earmark-check-fill"></i>
+                        <div>
+                            <strong>@FileName</strong>
+                            <small>File selected successfully</small>
+                        </div>
+                    </div>
+
+                    <div class="file-right">
+                        <span>@FileSize MB</span>
+                        <span class="status-badge">Ready</span>
+                    </div>
+                </div>
+            }
+
+            <div class="comments-box">
+                <label>Comments</label>
+
+                <textarea class="comment-area"
+                          @bind="Comments"
+                          placeholder="Add submission comments..."></textarea>
             </div>
-        }
+
+            <button class="submit-btn" @onclick="SubmitAssignment">
+                <i class="bi bi-send-fill"></i>
+                Submit Assignment
+            </button>
+
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <div class="success-message">
+                    <i class="bi bi-check-circle-fill"></i>
+                    @Message
+                </div>
+            }
+
+        </div>
 
     </div>
 
@@ -78,7 +111,7 @@
     {
         if (string.IsNullOrEmpty(FileName))
         {
-            Message = "Please select file.";
+            Message = "Please select a file before submitting.";
             return;
         }
 

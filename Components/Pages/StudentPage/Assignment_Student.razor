@@ -1,102 +1,213 @@
-﻿@* @page "/student/assignments"
-@using EducationAssignmentPortal.Components.Layout
-@layout StudentLayout
-@rendermode InteractiveServer
-<h3>Assignment_Student</h3>
-
-@code {
-
-} *@
-
 @page "/student/assignments"
+@page "/student-assignments"
 @layout StudentLayout
 @rendermode InteractiveServer
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Student")]
 
 @using EducationAssignmentPortal.Components.Layout
 @using EducationAssignmentPortal.Models
+@using EducationAssignmentPortal.Data
 @using EducationAssignmentPortal.Services
-@inject AssignmentService AssignmentService
-@inject UserService userService
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
-<div class="container-fluid">
+@inject AppDBContext _context
+@inject NotificationService NotificationService
 
-    <h3 class="mb-4">My Assignments</h3>
-
-    @if (assignments.Count == 0)
-    {
-        <div class="alert alert-info">
-            No assignments available.
-        </div>
-    }
-    else
-    {
-        <div class="card shadow">
-            <div class="card-body">
-
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Title</th>
-                            <th>Due Date</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        @foreach (var assignment in assignments)
-                        {
-                            <tr>
-                                <td>@assignment.Title</td>
-                                <td>@assignment.DueDate?.ToShortDateString()</td>
-
-                                <td>
-                                    @if (assignment.Status == "Completed")
-                                    {
-                                        <span class="badge bg-success">Completed</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-warning text-dark">Pending</span>
-                                    }
-                                </td>
-
-                                <td>
-                                    @if (assignment.Status != "Completed")
-                                    {
-                                        <button class="btn btn-sm btn-primary"
-                                                @onclick="() => MarkCompleted(assignment.Id)">
-                                            Mark Completed
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-success">✔ Done</span>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-
-            </div>
-        </div>
-    }
-
+<div class="page-header">
+    <h2><i class="bi bi-journal-text me-2 text-primary"></i>My Assignments</h2>
+    <p>Track and submit your pending assignments</p>
 </div>
 
-@code {
+@if (studentAssignments.Count == 0)
+{
+    <div class="modern-card text-center py-5">
+        <i class="bi bi-journal-x display-3 text-muted opacity-50"></i>
+        <h5 class="mt-4 fw-bold text-muted">No assignments available</h5>
+        <p class="text-muted small">Your faculty hasn't posted any assignments yet. Check back later.</p>
+    </div>
+}
+else
+{
+    <div class="modern-card">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="fw-bold mb-0">All Assignments</h5>
+            <div class="d-flex gap-2">
+                <span class="badge-m badge-warning-m">
+                    <i class="bi bi-hourglass-split me-1"></i>
+                    @PendingCount Pending
+                </span>
+                <span class="badge-m badge-success-m">
+                    <i class="bi bi-check-circle me-1"></i>
+                    @SubmittedCount Done
+                </span>
+            </div>
+        </div>
 
-    private List<Assignment> assignments = new();
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Assignment</th>
+                        <th>Due Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var item in studentAssignments)
+                    {
+                        var assignment = item.Assignment;
+
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon @(IsSubmitted(item.Status) ? "bg-green-soft" : "bg-warning-soft")"
+                                         style="width:36px;height:36px;font-size:1rem;margin:0;border-radius:8px;">
+                                        <i class="bi @(IsSubmitted(item.Status) ? "bi-check2" : "bi-journal")"></i>
+                                    </div>
+
+                                    <div>
+                                        <div class="fw-semibold">@assignment.Title</div>
+                                        <div class="small text-muted">ID: ASSGN-@assignment.Id</div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                @if (assignment.DueDate.HasValue)
+                                {
+                                    var daysLeft = (assignment.DueDate.Value - DateTime.Today).Days;
+
+                                    <div class="fw-medium">@assignment.DueDate.Value.ToString("MMM dd, yyyy")</div>
+
+                                    @if (!IsSubmitted(item.Status))
+                                    {
+                                        <div class="small @(daysLeft < 3 ? "text-danger" : "text-muted")">
+                                            @(daysLeft < 0 ? "Overdue" : daysLeft == 0 ? "Due today" : $"{daysLeft}d left")
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <span class="text-muted">No date</span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (IsSubmitted(item.Status))
+                                {
+                                    <span class="badge-m badge-success-m">
+                                        <i class="bi bi-check2-circle me-1"></i>@item.Status
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge-m badge-warning-m">
+                                        <i class="bi bi-hourglass-split me-1"></i>Pending
+                                    </span>
+                                }
+                            </td>
+
+                            <td class="text-end">
+                                @if (!IsSubmitted(item.Status))
+                                {
+                                    <button class="btn btn-sm btn-modern btn-primary-m"
+                                            @onclick="() => MarkSubmitted(item.AssignmentId)">
+                                        <i class="bi bi-check2"></i> Mark Submitted
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-success fw-semibold small">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Done
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
+
+    private List<StudentAssignment> studentAssignments = new();
+
+    private int PendingCount =>
+        studentAssignments.Count(x => x.Status == "Pending");
+
+    private int SubmittedCount =>
+        studentAssignments.Count(x => IsSubmitted(x.Status));
 
     protected override async Task OnInitializedAsync()
     {
-        assignments = await AssignmentService.GetAllAssignments();
+        await LoadAssignments();
     }
 
-    async Task  MarkCompleted(int id)
+    private async Task LoadAssignments()
     {
-        AssignmentService.UpdateStatusAsync(id, "Completed");
-        assignments = await AssignmentService.GetAllAssignments();
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated != true)
+            return;
+
+        var studentIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(studentIdClaim, out int studentId))
+            return;
+
+        studentAssignments = await _context.StudentAssignments
+            .Include(sa => sa.Assignment)
+            .ThenInclude(a => a.Course)
+            .Where(sa => sa.StudentId == studentId)
+            .OrderBy(sa => sa.Assignment.DueDate)
+            .ToListAsync();
+    }
+
+    private async Task MarkSubmitted(int assignmentId)
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        var studentIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+        if (!int.TryParse(studentIdClaim, out int studentId))
+            return;
+
+        var studentAssignment = await _context.StudentAssignments
+            .FirstOrDefaultAsync(x =>
+                x.StudentId == studentId &&
+                x.AssignmentId == assignmentId);
+
+        if (studentAssignment == null)
+            return;
+
+        studentAssignment.Status = "Submitted";
+        studentAssignment.SubmittedDate = DateTime.Now;
+
+        await _context.SaveChangesAsync();
+
+        await NotificationService.AddNotificationAsync(
+            "Faculty",
+            "Assignment Submitted",
+            "A student submitted an assignment.",
+            "Submission",
+            "/faculty/grading"
+        );
+
+        await LoadAssignments();
+    }
+
+    private bool IsSubmitted(string status)
+    {
+        return status == "Submitted" || status == "Completed";
     }
 }

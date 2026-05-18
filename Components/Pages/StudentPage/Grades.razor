@@ -1,4 +1,4 @@
-﻿@page "/student/grades"
+@page "/student/grades"
 @layout StudentLayout
 @using EducationAssignmentPortal.Components.Layout
 @using EducationAssignmentPortal.Models
@@ -7,50 +7,118 @@
 @inject AppDBContext _context
 @inject UserService UserService
 
-<h3>My Grades</h3>
+<div class="page-header">
+    <h2><i class="bi bi-bar-chart me-2 text-primary"></i>My Grades</h2>
+    <p>View your academic performance and graded results</p>
+</div>
 
 @if (grades == null || grades.Count == 0)
 {
-    <p>No grades available.</p>
+    <div class="modern-card text-center py-5">
+        <i class="bi bi-bar-chart display-3 text-muted opacity-50"></i>
+        <h5 class="mt-4 fw-bold text-muted">No grades published yet</h5>
+        <p class="text-muted small">Your faculty hasn't submitted any grades yet. Check back after assignments are graded.</p>
+    </div>
 }
 else
 {
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Course Name</th>
-                <th>Marks</th>
-                <th>Grade</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var grade in grades)
-            {
-                <tr>
-                    <td>@grade.CourseName</td>
-                    <td>@grade.Marks</td>
-                    <td>@grade.Grade</td>
-                </tr>
-            }
-        </tbody>
-    </table>
+    <!-- Summary Stats -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-blue-soft mx-auto">
+                    <i class="bi bi-journal-check"></i>
+                </div>
+                <h5 class="text-muted small fw-bold text-uppercase">Total Graded</h5>
+                <h2 class="fw-bold mb-0">@grades.Count</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-green-soft mx-auto">
+                    <i class="bi bi-star"></i>
+                </div>
+                <h5 class="text-muted small fw-bold text-uppercase">Average Marks</h5>
+                <h2 class="fw-bold mb-0">@(grades.Count > 0 ? (int)grades.Average(g => g.Marks) : 0)</h2>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="modern-card text-center">
+                <div class="stat-icon bg-purple-soft mx-auto">
+                    <i class="bi bi-trophy"></i>
+                </div>
+                <h5 class="text-muted small fw-bold text-uppercase">Top Score</h5>
+                <h2 class="fw-bold mb-0">@(grades.Count > 0 ? grades.Max(g => g.Marks) : 0)</h2>
+            </div>
+        </div>
+    </div>
+
+    <div class="modern-card">
+        <h5 class="fw-bold mb-4">
+            <i class="bi bi-table me-2 text-primary"></i>Grade Details
+        </h5>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Marks</th>
+                        <th>Grade</th>
+                        <th>Performance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var grade in grades)
+                    {
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon bg-blue-soft"
+                                         style="width:36px;height:36px;font-size:1rem;margin:0;border-radius:8px;">
+                                        <i class="bi bi-book"></i>
+                                    </div>
+                                    <span class="fw-semibold">@grade.CourseName</span>
+                                </div>
+                            </td>
+                            <td><strong>@grade.Marks</strong><span class="text-muted">/100</span></td>
+                            <td>
+                                <span class="badge-m @GetGradeBadge(grade.Grade)">@grade.Grade</span>
+                            </td>
+                            <td style="min-width:140px;">
+                                <div class="progress" style="height:8px;">
+                                    <div class="progress-bar @GetProgressColor(grade.Marks)"
+                                         style="width:@grade.Marks%"></div>
+                                </div>
+                                <div class="small text-muted mt-1">@grade.Marks%</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }
+
 @code {
     private List<StudentGrade> grades = new();
 
     protected override void OnInitialized()
     {
         var email = UserService.LoggedInUser?.Email;
-
         if (!string.IsNullOrEmpty(email))
-        {
-            grades = _context.StudentGrades
-                        .Where(g => g.StudentEmail == email)
-                        .ToList();
-        }
+            grades = _context.StudentGrades.Where(g => g.StudentEmail == email).ToList();
         else
-        {
             grades = new List<StudentGrade>();
-        }
     }
+
+    private string GetGradeBadge(string? g) => g switch
+    {
+        "A+" or "A" => "badge-success-m",
+        "B"         => "badge-info-m",
+        "C"         => "badge-warning-m",
+        _           => "badge-danger-m"
+    };
+
+    private string GetProgressColor(int marks) => marks >= 75 ? "bg-success" : marks >= 50 ? "bg-warning" : "bg-danger";
 }

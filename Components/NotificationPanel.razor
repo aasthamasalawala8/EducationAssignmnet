@@ -1,0 +1,117 @@
+﻿@using EducationAssignmentPortal.Models
+@using EducationAssignmentPortal.Services
+@inject NotificationService NotificationService
+@inject NavigationManager Navigation
+
+<div class="notification-card">
+
+    <div class="notification-header">
+        <div>
+            <h5>Notifications</h5>
+            <p>@UnreadCount unread updates</p>
+        </div>
+
+        <span class="notification-badge">@UnreadCount</span>
+    </div>
+
+    @if (Notifications.Count == 0)
+    {
+        <div class="notification-empty">
+            <i class="bi bi-bell-slash"></i>
+            <span>No notifications available</span>
+        </div>
+    }
+    else
+    {
+        <div class="notification-list">
+            @foreach (var notification in Notifications)
+            {
+                <div class="notification-item @(notification.IsRead ? "read" : "unread")"
+                     @onclick="() => OpenNotification(notification)">
+
+                    <div class="notification-icon @GetIconColor(notification.Type)">
+                        <i class="bi @GetIcon(notification.Type)"></i>
+                    </div>
+
+                    <div class="notification-text">
+                        <strong>@notification.Title</strong>
+                        <p>@notification.Message</p>
+                        <small>
+                            <i class="bi bi-clock me-1"></i>
+                            @notification.CreatedAt.ToString("dd MMM, hh:mm tt")
+                        </small>
+                    </div>
+
+                </div>
+            }
+        </div>
+
+        <button class="mark-read-btn" @onclick="MarkAllAsRead">
+            <i class="bi bi-check2-circle me-1"></i>
+            Mark all as read
+        </button>
+    }
+
+</div>
+
+@code {
+    [Parameter] public string Role { get; set; } = "";
+
+    private List<Notification> Notifications = new();
+    private int UnreadCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotifications();
+    }
+
+    private async Task LoadNotifications()
+    {
+        Notifications = await NotificationService.GetNotificationsByRoleAsync(Role);
+        UnreadCount = await NotificationService.GetUnreadCountAsync(Role);
+    }
+
+    private async Task MarkAllAsRead()
+    {
+        await NotificationService.MarkAllAsReadAsync(Role);
+        await LoadNotifications();
+    }
+
+    private async Task OpenNotification(Notification notification)
+    {
+        await NotificationService.MarkAsReadAsync(notification.Id);
+
+        if (!string.IsNullOrWhiteSpace(notification.TargetUrl))
+        {
+            Navigation.NavigateTo(notification.TargetUrl);
+        }
+
+        await LoadNotifications();
+    }
+
+    private string GetIcon(string type)
+    {
+        return type switch
+        {
+            "Assignment" => "bi-journal-plus",
+            "Grade" => "bi-star-fill",
+            "Submission" => "bi-upload",
+            "Approval" => "bi-check-circle-fill",
+            "Reminder" => "bi-alarm",
+            _ => "bi-bell-fill"
+        };
+    }
+
+    private string GetIconColor(string type)
+    {
+        return type switch
+        {
+            "Assignment" => "notif-blue",
+            "Grade" => "notif-green",
+            "Submission" => "notif-orange",
+            "Approval" => "notif-purple",
+            "Reminder" => "notif-red",
+            _ => "notif-blue"
+        };
+    }
+}

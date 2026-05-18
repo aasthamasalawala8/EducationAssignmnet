@@ -1,0 +1,87 @@
+﻿@page "/student/submit-assignment"
+@using EducationAssignmentPortal.Components.Layout
+@using Microsoft.AspNetCore.Components.Forms
+@layout StudentLayout
+
+<div class="submission-page">
+
+    <div class="submit-card">
+
+        <div class="submit-header">
+            <h1>Submit Assignment</h1>
+            <p>Upload your assignment file</p>
+        </div>
+
+        <label class="upload-box">
+
+            <InputFile OnChange="HandleUpload" class="hidden-input" />
+
+            <i class="bi bi-cloud-upload upload-icon"></i>
+
+            <h4>Choose File</h4>
+
+            <span>PDF, DOC, DOCX, ZIP</span>
+
+        </label>
+
+        @if (!string.IsNullOrEmpty(FileName))
+        {
+            <div class="file-box">
+                <i class="bi bi-file-earmark-check-fill"></i>
+                <span>@FileName (@FileSize MB)</span>
+            </div>
+        }
+
+        <textarea class="comment-box"
+                  @bind="Comments"
+                  placeholder="Add comments...">
+        </textarea>
+
+        <button class="submit-btn"
+                @onclick="SubmitAssignment">
+
+            <i class="bi bi-send-fill"></i>
+            Submit Assignment
+
+        </button>
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="message-box">
+                @Message
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    private string? FileName;
+    private string FileSize = "0";
+    private string Comments = "";
+    private string Message = "";
+
+    private void HandleUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+
+        FileName = file.Name;
+
+        FileSize = Math.Round(file.Size / 1024.0 / 1024.0, 2).ToString();
+
+        Message = "";
+    }
+
+    private void SubmitAssignment()
+    {
+        if (string.IsNullOrEmpty(FileName))
+        {
+            Message = "Please select file.";
+            return;
+        }
+
+        Message = "Assignment submitted successfully!";
+    }
+}

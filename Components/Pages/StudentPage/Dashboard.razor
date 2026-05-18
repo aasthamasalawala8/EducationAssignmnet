@@ -1,4 +1,4 @@
-@layout StudentLayout
+﻿@layout StudentLayout
 @page "/student-dashboard"
 @page "/student"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Student")]
@@ -6,30 +6,49 @@
 @using EducationAssignmentPortal.Components.Layout
 @using EducationAssignmentPortal.Models
 @using EducationAssignmentPortal.Services
+@using EducationAssignmentPortal.Data
+@using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
-@inject AssignmentService AssignmentService
+@inject AppDBContext _context
 @inject NavigationManager Navigation
 
 <div class="container-fluid">
-    <AuthorizeView Roles="Student">
-        <Authorized>
-            <div class="welcome-banner shadow-lg">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="display-5 fw-bold mb-2">Hello, @context.User.Identity?.Name!</h1>
-                        <p class="lead opacity-75">You have @Pending pending assignments to complete. Keep it up!</p>
-                    </div>
-                    <div class="d-none d-lg-block">
-                        <i class="bi bi-person-workspace display-1 opacity-25"></i>
-                    </div>
-                </div>
-            </div>
-        </Authorized>
-    </AuthorizeView>
 
-    <!-- STATISTICS CARDS -->
+    <div class="row g-4 mb-5 align-items-stretch dashboard-top-row">
+
+        <div class="col-lg-7">
+            <AuthorizeView Roles="Student">
+                <Authorized>
+                    <div class="welcome-banner shadow-lg h-100">
+                        <div class="d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <h1 class="display-5 fw-bold mb-2">
+                                    Hello, @context.User.Identity?.Name!
+                                </h1>
+                                <p class="lead opacity-75">
+                                    You have @Pending pending assignments to complete. Keep it up!
+                                </p>
+                            </div>
+
+                            <div class="d-none d-lg-block">
+                                <i class="bi bi-person-workspace display-1 opacity-25"></i>
+                            </div>
+                        </div>
+                    </div>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <div class="col-lg-5">
+            <NotificationPanel Role="Student" />
+        </div>
+
+    </div>
+
     <div class="row g-4 mb-5">
+
         <div class="col-md-3">
             <div class="modern-card text-center">
                 <div class="stat-icon bg-blue-soft text-primary mx-auto">
@@ -69,43 +88,64 @@
                 <h2 class="fw-bold mb-0">@Percent%</h2>
             </div>
         </div>
+
     </div>
 
     <div class="row g-4 mb-5">
-        <!-- COMPLETION PROGRESS -->
+
         <div class="col-lg-6">
             <div class="modern-card h-100">
-                <h5 class="fw-bold mb-4"><i class="bi bi-graph-up-arrow me-2 text-primary"></i> Academic Progress</h5>
+
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-graph-up-arrow me-2 text-primary"></i>
+                    Academic Progress
+                </h5>
+
                 <div class="text-center mb-4">
                     <div class="display-3 fw-bold text-primary">@Percent%</div>
                     <div class="text-muted">Assignments Finished</div>
                 </div>
+
                 <div class="progress" style="height: 12px; border-radius: 6px;">
-                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
-                         role="progressbar" style="width: @Percent%">@Percent%</div>
+                    <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated"
+                         role="progressbar"
+                         style="width: @Percent%">
+                        @Percent%
+                    </div>
                 </div>
+
                 <div class="d-flex justify-content-between mt-3 px-1">
                     <span class="small fw-bold">0%</span>
                     <span class="small text-muted">@Completed of @Total Done</span>
                     <span class="small fw-bold">100%</span>
                 </div>
+
                 <div class="mt-4">
-                    <button class="btn btn-modern btn-primary-m w-100" @onclick="GoToAssignments">
-                        Review All Assignments <i class="bi bi-arrow-right ms-1"></i>
+                    <button class="btn btn-modern btn-primary-m w-100"
+                            @onclick="GoToAssignments">
+                        Review All Assignments
+                        <i class="bi bi-arrow-right ms-1"></i>
                     </button>
                 </div>
+
             </div>
         </div>
 
-        <!-- UPCOMING DEADLINES -->
         <div class="col-lg-6">
             <div class="modern-card h-100">
-                <h5 class="fw-bold mb-4"><i class="bi bi-clock me-2 text-danger"></i> Urgent Deadlines</h5>
+
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-clock me-2 text-danger"></i>
+                    Urgent Deadlines
+                </h5>
+
                 @if (Upcoming.Count == 0)
                 {
                     <div class="text-center py-5">
                         <i class="bi bi-check-circle-fill text-success display-1 opacity-25"></i>
-                        <p class="text-muted mt-3">You're all caught up! No urgent assignments.</p>
+                        <p class="text-muted mt-3">
+                            You're all caught up! No urgent assignments.
+                        </p>
                     </div>
                 }
                 else
@@ -115,49 +155,59 @@
                         {
                             <div class="list-group-item px-0 py-3 border-0 border-bottom bg-transparent">
                                 <div class="d-flex justify-content-between align-items-center">
+
                                     <div>
-                                        <div class="fw-bold">@item.Title</div>
-                                        <div class="small text-muted">Ref: ASSGN-@item.Id</div>
+                                        <div class="fw-bold">@item.Assignment.Title</div>
+                                        <div class="small text-muted">
+                                            Ref: ASSGN-@item.Assignment.Id
+                                        </div>
                                     </div>
+
                                     <div class="text-end">
-                                        <div class="badge-m badge-danger-m mb-1">Due @item.DueDate?.ToShortDateString()</div>
+                                        <div class="badge-m badge-danger-m mb-1">
+                                            Due @item.Assignment.DueDate?.ToShortDateString()
+                                        </div>
                                     </div>
+
                                 </div>
                             </div>
                         }
                     </div>
                 }
+
             </div>
         </div>
+
     </div>
+
 </div>
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; } = default!;
 
-    private List<Assignment> assignments = new();
+    private List<StudentAssignment> studentAssignments = new();
 
-    private int Total => assignments?.Count ?? 0;
+    private int Total => studentAssignments.Count;
 
-    private int Completed => 
-        assignments?.Count(a => a.Status == "Completed") ?? 0;
+    private int Completed =>
+        studentAssignments.Count(a => a.Status == "Submitted" || a.Status == "Completed");
 
-    private int Pending => 
-        assignments?.Count(a => a.Status != "Completed") ?? 0;
+    private int Pending =>
+        studentAssignments.Count(a => a.Status == "Pending");
 
     private int Percent =>
         Total == 0 ? 0 : (Completed * 100) / Total;
 
-    private List<Assignment> Upcoming =>
-        assignments?
-            .Where(a => a.Status != "Completed"
-                        && a.DueDate.HasValue
-                        && a.DueDate.Value >= DateTime.Today)
-            .OrderBy(a => a.DueDate)
+    private List<StudentAssignment> Upcoming =>
+        studentAssignments
+            .Where(a => a.Status == "Pending"
+                        && a.Assignment != null
+                        && a.Assignment.DueDate.HasValue
+                        && a.Assignment.DueDate.Value >= DateTime.Today)
+            .OrderBy(a => a.Assignment.DueDate)
             .Take(5)
-            .ToList()
-        ?? new List<Assignment>();
+            .ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -168,7 +218,16 @@
 
             if (user.Identity?.IsAuthenticated == true)
             {
-                assignments = await AssignmentService.GetAllAssignments();
+                var studentIdClaim = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                if (!string.IsNullOrEmpty(studentIdClaim) && int.TryParse(studentIdClaim, out int studentId))
+                {
+                    studentAssignments = await _context.StudentAssignments
+                        .Include(sa => sa.Assignment)
+                        .ThenInclude(a => a.Course)
+                        .Where(sa => sa.StudentId == studentId)
+                        .ToListAsync();
+                }
             }
         }
         catch (Exception ex)
@@ -179,6 +238,6 @@
 
     void GoToAssignments()
     {
-        Navigation.NavigateTo("/student/assignments");
+        Navigation.NavigateTo("/student-assignments");
     }
 }

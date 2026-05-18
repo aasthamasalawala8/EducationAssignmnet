@@ -14,30 +14,49 @@
 @inject NavigationManager Navigation
 
 <div class="container-fluid">
-    <AuthorizeView Roles="Faculty">
-        <Authorized>
-            <div class="welcome-banner shadow-lg">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h1 class="display-5 fw-bold mb-2">Welcome back, @context.User.Identity?.Name!</h1>
-                        <p class="lead opacity-75">Manage your courses, assignments, and student performance from one place.</p>
+
+    <!-- BANNER + NOTIFICATION SIDE BY SIDE -->
+    <div class="row g-4 mb-5 align-items-stretch dashboard-top-row">
+
+        <div class="col-lg-7">
+            <AuthorizeView Roles="Faculty">
+                <Authorized>
+                    <div class="welcome-banner shadow-lg h-100">
+                        <div class="d-flex justify-content-between align-items-center h-100">
+                            <div>
+                                <h1 class="display-5 fw-bold mb-2">
+                                    Welcome back, @context.User.Identity?.Name!
+                                </h1>
+                                <p class="lead opacity-75">
+                                    Manage your courses, assignments, and student performance from one place.
+                                </p>
+                            </div>
+
+                            <div class="d-none d-lg-block">
+                                <i class="bi bi-mortarboard-fill display-1 opacity-25"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="d-none d-lg-block">
-                        <i class="bi bi-mortarboard-fill display-1 opacity-25"></i>
-                    </div>
-                </div>
-            </div>
-        </Authorized>
-    </AuthorizeView>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+
+        <div class="col-lg-5">
+            <NotificationPanel Role="Faculty" />
+        </div>
+
+    </div>
 
     <!-- QUICK ACTIONS -->
-    <div class="d-flex gap-3 mb-5">
+    <div class="d-flex gap-3 mb-5 flex-wrap">
         <button class="btn btn-modern btn-primary-m" @onclick="GoToAddAssignment">
             <i class="bi bi-plus-circle me-1"></i> New Assignment
         </button>
+
         <button class="btn btn-modern btn-outline-primary" @onclick="GoToMyCourses">
             <i class="bi bi-eye me-1"></i> View Courses
         </button>
+
         <button class="btn btn-modern btn-outline-warning" @onclick="GoToGrading">
             <i class="bi bi-star me-1"></i> Grade Submissions
         </button>
@@ -87,10 +106,15 @@
     </div>
 
     <div class="row g-4">
+
         <!-- UPCOMING DEADLINES -->
         <div class="col-lg-6">
             <div class="modern-card h-100">
-                <h5 class="fw-bold mb-4"><i class="bi bi-calendar-event me-2 text-primary"></i> Upcoming Deadlines</h5>
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-calendar-event me-2 text-primary"></i>
+                    Upcoming Deadlines
+                </h5>
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
@@ -109,7 +133,7 @@
                                     </td>
                                     <td>
                                         <span class="badge-m badge-warning-m">
-                                            @(item.DueDate.HasValue ? item.DueDate.Value.ToString("MMM dd, yyyy") : "TBD")
+                                            @(item.DueDate.HasValue? item.DueDate.Value.ToString("MMM dd, yyyy") : "TBD")
                                         </span>
                                     </td>
                                 </tr>
@@ -123,7 +147,11 @@
         <!-- RECENT ASSIGNMENTS -->
         <div class="col-lg-6">
             <div class="modern-card h-100">
-                <h5 class="fw-bold mb-4"><i class="bi bi-lightning-charge me-2 text-success"></i> Recent Assignments</h5>
+                <h5 class="fw-bold mb-4">
+                    <i class="bi bi-lightning-charge me-2 text-success"></i>
+                    Recent Assignments
+                </h5>
+
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
@@ -149,6 +177,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 </div>
 
@@ -185,7 +214,7 @@
             totalAssignments = assignments.Count;
             pendingAssignments = assignments.Count(a => a.Status == "Pending");
             totalCourses = assignments.Select(a => a.CourseId).Distinct().Count();
-            totalStudents = 120; // temporary
+            totalStudents = 120;
 
             upcomingAssignments = assignments
                 .Where(a => a.DueDate.HasValue && a.DueDate.Value >= DateTime.Today)

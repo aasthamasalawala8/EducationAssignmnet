@@ -2,65 +2,60 @@
 @using EducationAssignmentPortal.Services
 @inject NavigationManager Navigation
 @inject UserService UserService
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="d-flex">
 
     <!-- Sidebar -->
-    <div class="faculty-sidebar d-flex flex-column bg-dark text-white p-3" style="width: 250px;">
-        <h4 class="faculty-title mb-4">Faculty Panel</h4>
+    <div class="faculty-sidebar">
+        <div class="faculty-title">
+            <div class="brand-icon">
+                <i class="bi bi-mortarboard-fill text-white"></i>
+            </div>
+            <span>EduAssign</span>
+        </div>
 
-        <nav class="faculty-nav flex-grow-1">
+        <div class="sidebar-section-label">Faculty Portal</div>
 
-            <!-- Dashboard -->
-            <NavLink href="/faculty/dashboard"
-                     class="faculty-link text-white d-flex align-items-center py-2 px-3 mb-2 rounded"
-                     Match="NavLinkMatch.All">
-                <i class="bi bi-speedometer2 me-2"></i> Dashboard
+        <nav class="faculty-nav">
+            <NavLink href="/faculty/dashboard" class="faculty-link" Match="NavLinkMatch.All">
+                <i class="bi bi-speedometer2"></i> Dashboard
             </NavLink>
 
-            <!-- Assignments -->
-            <NavLink href="/faculty/assignments"
-                     class="faculty-link text-white d-flex align-items-center py-2 px-3 mb-2 rounded">
-                <i class="bi bi-journal-text me-2"></i> Assignments
+            <NavLink href="/faculty/assignments" class="faculty-link">
+                <i class="bi bi-journal-text"></i> Assignments
             </NavLink>
 
-            <!-- My Courses -->
-            <NavLink href="/faculty/mycourses"
-                     class="faculty-link text-white d-flex align-items-center py-2 px-3 mb-2 rounded">
-                <i class="bi bi-book me-2"></i> My Courses
+            <NavLink href="/faculty/mycourses" class="faculty-link">
+                <i class="bi bi-book"></i> My Courses
             </NavLink>
 
-            <!-- Grading -->
-            <NavLink href="/faculty/grading"
-                     class="faculty-link text-white d-flex align-items-center py-2 px-3 mb-2 rounded">
-                <i class="bi bi-clipboard-check me-2"></i> Grading
+            <NavLink href="/faculty/grading" class="faculty-link">
+                <i class="bi bi-clipboard-check"></i> Grading
             </NavLink>
 
+            <hr class="sidebar-divider" />
+
+            <button class="sidebar-logout-btn" @onclick="ShowLogoutConfirmation">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
         </nav>
-
-        <!-- Logout Button -->
-        <button class="btn btn-danger w-100 py-2 mt-3" @onclick="ShowLogoutConfirmation">
-            <i class="bi bi-box-arrow-right me-2"></i> Logout
-        </button>
     </div>
 
     <!-- Main Content -->
-    <div class="flex-fill p-4 faculty-content">
+    <div class="faculty-content flex-fill">
         @Body
     </div>
 
 </div>
 
-<ConfirmationModal 
-    IsVisible="isLogoutConfirmVisible" 
-    Title="Logout Confirmation" 
-    Message="Are you sure you want to logout?"
-    YesButtonText="Yes"
-    NoButtonText="No"
-    OnConfirm="PerformLogout"
-    OnCancel="CancelLogout" />
-
-@inject AuthenticationStateProvider AuthStateProvider
+<ConfirmationModal IsVisible="isLogoutConfirmVisible"
+                   Title="Logout Confirmation"
+                   Message="Are you sure you want to logout?"
+                   YesButtonText="Yes"
+                   NoButtonText="No"
+                   OnConfirm="PerformLogout"
+                   OnCancel="CancelLogout" />
 
 @code {
     private bool isLogoutConfirmVisible = false;
@@ -73,9 +68,6 @@
         isLogoutConfirmVisible = false;
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
         await customAuthStateProvider.UpdateAuthenticationState(null);
-        Navigation.NavigateTo("/login?logout=true");
+        Navigation.NavigateTo("/login?logout=true", true);
     }
-
-    // Renamed original for clarity
-    async Task Logout() => await PerformLogout();
 }

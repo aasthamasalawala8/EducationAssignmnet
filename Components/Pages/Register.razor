@@ -9,86 +9,125 @@
 @inject NavigationManager Navigation
 
 <style>
-    body {
-        margin: 0;
-    }
+    body { margin: 0; }
 
     .register-wrapper {
         height: 100vh;
         display: flex;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
     }
 
-    /* LEFT SIDE */
     .left-panel {
-        width: 50%;
-        background: linear-gradient(135deg, #4e73df, #224abe);
+        width: 55%;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
         color: white;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 40px;
+        padding: 60px;
+        position: relative;
+        overflow: hidden;
     }
-
-    .left-panel h1 {
-        font-size: 40px;
-        font-weight: bold;
+    .left-panel::before {
+        content: '';
+        position: absolute;
+        top: -20%; right: -10%;
+        width: 400px; height: 400px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        pointer-events: none;
     }
-
-    .left-panel p {
-        margin-top: 15px;
-        font-size: 18px;
-        text-align: center;
-        max-width: 350px;
+    .left-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -15%; left: -8%;
+        width: 300px; height: 300px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        pointer-events: none;
     }
-
-    /* RIGHT SIDE */
-    .right-panel {
-        width: 50%;
+    .left-brand {
         display: flex;
-        justify-content: center;
         align-items: center;
-        background-color: #f8f9fc;
+        gap: 14px;
+        margin-bottom: 40px;
+        z-index: 1;
+    }
+    .left-brand-icon {
+        width: 56px; height: 56px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 16px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.75rem;
+    }
+    .left-brand h1 { font-size: 2rem; font-weight: 800; margin: 0; letter-spacing: -0.03em; }
+    .left-tagline {
+        font-size: 1.05rem; text-align: center;
+        max-width: 380px; opacity: 0.85;
+        line-height: 1.7; z-index: 1; margin-bottom: 40px;
+    }
+    .left-features { display: flex; flex-direction: column; gap: 14px; z-index: 1; width: 100%; max-width: 340px; }
+    .left-feature-item {
+        display: flex; align-items: center; gap: 12px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px; padding: 12px 16px;
+        font-size: 0.9rem; font-weight: 500;
     }
 
+    .right-panel {
+        width: 45%;
+        display: flex; justify-content: center; align-items: center;
+        background: #f8fafc; padding: 40px;
+    }
     .register-card {
-        width: 380px;
-        padding: 30px;
-        border-radius: 15px;
-        background: white;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        width: 100%; max-width: 420px;
+        background: white; padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
     }
+    .register-card-header { text-align: center; margin-bottom: 1.75rem; }
+    .register-card-header h2 { font-size: 1.6rem; font-weight: 800; color: #0f172a; margin-bottom: 6px; }
+    .register-card-header p { color: #64748b; font-size: 0.875rem; margin: 0; }
 
-    .register-title {
-        text-align: center;
-        font-weight: 600;
-        margin-bottom: 20px;
-        color: #4e73df;
+    .form-field { margin-bottom: 1rem; }
+    .form-field label {
+        display: block; font-size: 0.78rem; font-weight: 700;
+        color: #64748b; text-transform: uppercase;
+        letter-spacing: 0.05em; margin-bottom: 6px;
     }
-
-    .form-control {
-        border-radius: 10px;
+    .form-field .form-control, .form-field .form-select {
+        border-radius: 10px; border: 1.5px solid #e2e8f0;
+        padding: 0.65rem 0.9rem; font-size: 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s; width: 100%;
     }
-
+    .form-field .form-control:focus, .form-field .form-select:focus {
+        border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.15); outline: none;
+    }
     .btn-register {
-        background-color: #4e73df;
-        color: white;
-        border-radius: 10px;
-        font-weight: 500;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: white; border: none; border-radius: 10px;
+        font-weight: 700; font-size: 0.95rem; padding: 0.75rem;
+        width: 100%; cursor: pointer; transition: all 0.2s;
+        margin-top: 0.5rem;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-
     .btn-register:hover {
-        background-color: #224abe;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79,70,229,0.35);
+        filter: brightness(1.05);
     }
-
-    .login-link {
-        color: #4e73df;
-        font-weight: 500;
-        text-decoration: none;
+    .register-footer {
+        text-align: center; margin-top: 1.25rem;
+        font-size: 0.85rem; color: #64748b;
     }
+    .register-footer a { color: #4f46e5; font-weight: 600; text-decoration: none; }
+    .register-footer a:hover { text-decoration: underline; }
 
-    .login-link:hover {
-        text-decoration: underline;
+    @@media (max-width: 768px) {
+        .left-panel { display: none; }
+        .right-panel { width: 100%; padding: 24px; }
     }
 </style>
 
@@ -96,98 +135,108 @@
 
     <!-- LEFT PANEL -->
     <div class="left-panel">
-        <h1>EduAssign</h1>
-        <p>
-            Join the Education Assignment Portal.  
-            Register to manage assignments and dashboards easily.
+        <div class="left-brand">
+            <div class="left-brand-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h1>EduAssign</h1>
+        </div>
+        <p class="left-tagline">
+            Join the Education Assignment Portal and start managing your academic journey today.
         </p>
+        <div class="left-features">
+            <div class="left-feature-item">
+                <i class="bi bi-person-check"></i>
+                <span>Simple & fast account setup</span>
+            </div>
+            <div class="left-feature-item">
+                <i class="bi bi-shield-check"></i>
+                <span>Role-based secure access</span>
+            </div>
+            <div class="left-feature-item">
+                <i class="bi bi-lightning-charge"></i>
+                <span>Get started in minutes</span>
+            </div>
+        </div>
     </div>
 
     <!-- RIGHT PANEL -->
     <div class="right-panel">
         <div class="register-card">
 
-            <h4 class="register-title">Register</h4>
+            <div class="register-card-header">
+                <h2>Create account</h2>
+                <p>Fill in the details below to get started</p>
+            </div>
 
             <EditForm Model="@user" OnValidSubmit="HandleValidSubmit">
-              
                 <DataAnnotationsValidator />
-                <ValidationSummary />
+                <ValidationSummary class="alert alert-danger mb-3" />
 
-                <div class="mb-3">
-                    <label>Name</label>
-                    <InputText @bind-Value="user.Name"
-                               class="form-control"
-                               placeholder="Enter your name" />
+                <div class="form-field">
+                    <label>Full Name</label>
+                    <InputText @bind-Value="user.Name" class="form-control" placeholder="John Doe" />
                 </div>
 
-                <div class="mb-3">
-                    <label>Email</label>
-                    <InputText @bind-Value="user.Email"
-                               class="form-control"
-                               placeholder="Enter your email" />
+                <div class="form-field">
+                    <label>Email address</label>
+                    <InputText @bind-Value="user.Email" class="form-control" placeholder="you@example.com" />
                 </div>
 
-                <div class="mb-3">
+                <div class="form-field">
                     <label>Password</label>
-                    <InputText type="password"
-                               @bind-Value="user.Password"
-                               class="form-control"
-                               placeholder="Enter your password" />
+                    <InputText type="password" @bind-Value="user.Password" class="form-control" placeholder="••••••••" />
                 </div>
-                <div class="mb-3">
-    <label>Register As</label>
-    <InputSelect @bind-Value="user.Role" class="form-control">
-        <option value="Student">Student</option>
-        <option value="Faculty">Faculty</option>
-         <option value="Admin">Admin</option>
-    </InputSelect>
-</div>
 
-                <button type="submit" class="btn btn-register w-100">
-                    Register
+                <div class="form-field">
+                    <label>Register As</label>
+                    <InputSelect @bind-Value="user.Role" class="form-select">
+                        <option value="Student">Student</option>
+                        <option value="Faculty">Faculty</option>
+                        <option value="Admin">Admin</option>
+                    </InputSelect>
+                </div>
+
+                <button type="submit" class="btn-register">
+                    <i class="bi bi-person-plus"></i> Create Account
                 </button>
+
+                <div class="register-footer">
+                    Already have an account? <a href="/login">Sign In</a>
+                </div>
             </EditForm>
 
-            <div class="text-center mt-3">
-                <span style="font-size:14px;">Already have an account?</span>
-                <a href="/login" class="login-link"> Login</a>
-            </div>
+            @if (!string.IsNullOrEmpty(Message))
+            {
+                <div class="alert alert-success mt-3 text-center" style="border-radius:10px;">
+                    <i class="bi bi-check-circle me-1"></i> @Message
+                </div>
+            }
 
         </div>
     </div>
 
 </div>
 
-@if (!string.IsNullOrEmpty(Message))
-{
-    <div class="alert alert-success mt-3 text-center">
-        @Message
-    </div>
-}
-
 @code {
-   private User user = new User();
-   private string? Message;
+    private User user = new User();
+    private string? Message;
 
-   private async Task HandleValidSubmit()
-{
-    if (user.Role == "Faculty")
+    private async Task HandleValidSubmit()
     {
-        user.IsApproved = false; // Needs admin approval
-         Message = "Registration successful! Wait for admin approval.";
+        if (user.Role == "Faculty")
+        {
+            user.IsApproved = false;
+            Message = "Registration successful! Wait for admin approval.";
+        }
+        else
+        {
+            user.IsApproved = true;
+            Message = "Registration successful! You can login now.";
+        }
+
+        await UserService.Register(user);
+        Navigation.NavigateTo("/login");
+        user = new User();
     }
-    else
-    {
-        user.IsApproved = true;
-          Message = "Registration successful! You can login now.";
-    }
-
-    await UserService.Register(user);
-
-    Navigation.NavigateTo("/login");
-     user = new User(); // Clear form
 }
-   
-}
-

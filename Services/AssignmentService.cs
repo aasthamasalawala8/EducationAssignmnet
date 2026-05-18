@@ -44,12 +44,39 @@ namespace EducationAssignmentPortal.Services
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        // 🔹 Add new assignment
+        // 🔥 ADD NEW ASSIGNMENT + MAP TO ALL STUDENTS
         public async Task AddAssignmentAsync(Assignment assignment)
         {
             using var context = _factory.CreateDbContext();
 
+            // Step 1: Save assignment
             context.Assignments.Add(assignment);
+            await context.SaveChangesAsync();
+
+            // Step 2: Get all students
+            var students = await context.Users
+                .Where(u => u.Role == "Student")
+                .ToListAsync();
+
+            // Step 3: Assign to each student
+            foreach (var student in students)
+            {
+                // Prevent duplicate entry
+                bool exists = await context.StudentAssignments.AnyAsync(sa =>
+                    sa.StudentId == student.Id &&
+                    sa.AssignmentId == assignment.Id);
+
+                if (!exists)
+                {
+                    context.StudentAssignments.Add(new StudentAssignment
+                    {
+                        StudentId = student.Id,
+                        AssignmentId = assignment.Id,
+                        Status = "Pending"
+                    });
+                }
+            }
+
             await context.SaveChangesAsync();
         }
 
@@ -62,7 +89,7 @@ namespace EducationAssignmentPortal.Services
             await context.SaveChangesAsync();
         }
 
-        // 🔹 Update only status (Student)
+        // ⚠️ OLD METHOD (DON'T USE FOR STUDENTS)
         public async Task UpdateStatusAsync(int id, string status)
         {
             using var context = _factory.CreateDbContext();
@@ -77,7 +104,7 @@ namespace EducationAssignmentPortal.Services
             }
         }
 
-        // 🔹 Delete assignment
+        // 🔹 DELETE assignment + related student records
         public async Task DeleteAssignmentAsync(int id)
         {
             using var context = _factory.CreateDbContext();
@@ -87,7 +114,14 @@ namespace EducationAssignmentPortal.Services
 
             if (assignment != null)
             {
+                // 🔥 remove related student assignments
+                var studentAssignments = context.StudentAssignments
+                    .Where(sa => sa.AssignmentId == id);
+
+                context.StudentAssignments.RemoveRange(studentAssignments);
+
                 context.Assignments.Remove(assignment);
+
                 await context.SaveChangesAsync();
             }
         }

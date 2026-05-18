@@ -2,84 +2,137 @@
 @page "/faculty-grading"
 @layout FacultyLayout
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Faculty")]
+
 @using EducationAssignmentPortal.Components.Layout
 @using EducationAssignmentPortal.Data
 @using EducationAssignmentPortal.Models
 @using EducationAssignmentPortal.Services
+
 @inject AppDBContext _context
 @inject UserService UserService
 @inject CourseService CourseService
+@inject NotificationService NotificationService
 
-<h3>Student Grading</h3>
+<div class="page-header">
+    <h2><i class="bi bi-clipboard-check me-2 text-primary"></i>Student Grading</h2>
+    <p>Assign marks and publish grades to students</p>
+</div>
 
-    <EditForm Model="@grade" OnValidSubmit="HandleValidSubmit">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
+<div class="row g-4">
 
-        <div class="mb-2">
-            <label>Student Email</label>
-            <InputText class="form-control" @bind-Value="grade.StudentEmail" />
-        </div>
+    <!-- FORM CARD -->
+    <div class="col-lg-5">
+        <div class="modern-card h-100">
+            <h5 class="fw-bold mb-4">
+                <i class="bi bi-pencil-square me-2 text-primary"></i>Add Grade
+            </h5>
 
-        <div class="mb-2">
-            <label>Course</label>
-            <InputSelect class="form-control" @bind-Value="grade.CourseName">
-                <option value="">-- Select Course --</option>
+            <EditForm Model="@grade" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="alert alert-danger mb-3" />
 
-                @foreach (var course in facultyCourses)
-                {
-                    <option value="@course.CourseName">
-                        @course.CourseName (@course.CourseCode)
-                    </option>
-                }
-            </InputSelect>
-        </div>
+                <div class="mb-3">
+                    <label class="form-label">Student Email</label>
+                    <InputText class="form-control" @bind-Value="grade.StudentEmail"
+                               placeholder="student@example.com" />
+                </div>
 
-        <div class="mb-2">
-            <label>Marks</label>
-            <InputNumber class="form-control" @bind-Value="grade.Marks" />
-        </div>
+                <div class="mb-3">
+                    <label class="form-label">Course</label>
+                    <InputSelect class="form-select" @bind-Value="grade.CourseName">
+                        <option value="">— Select Course —</option>
+                        @foreach (var course in facultyCourses)
+                        {
+                            <option value="@course.CourseName">
+                                @course.CourseName (@course.CourseCode)
+                            </option>
+                        }
+                    </InputSelect>
+                </div>
 
-        <button class="btn btn-success mt-2">Add Grade</button>
-    </EditForm>
+                <div class="mb-4">
+                    <label class="form-label">Marks (out of 100)</label>
+                    <InputNumber class="form-control" @bind-Value="grade.Marks"
+                                 placeholder="0 – 100" />
+                </div>
 
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div class="alert alert-success mt-3">
-            @successMessage
-        </div>
-    }
+                <button type="submit" class="btn btn-modern btn-primary-m w-100">
+                    <i class="bi bi-check-circle"></i> Submit Grade
+                </button>
 
-    <hr />
+            </EditForm>
 
-    <h4>All Grades</h4>
-
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Email</th>
-                <th>Course</th>
-                <th>Marks</th>
-                <th>Grade</th>
-                <th>Given By</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var g in grades)
+            @if (!string.IsNullOrEmpty(successMessage))
             {
-                <tr>
-                    <td>@g.StudentEmail</td>
-                    <td>@g.CourseName</td>
-                    <td>@g.Marks</td>
-                    <td>@g.Grade</td>
-                    <td>@g.FacultyEmail</td>
-                </tr>
+                <div class="alert alert-success mt-3">
+                    <i class="bi bi-check-circle-fill me-2"></i> @successMessage
+                </div>
             }
-        </tbody>
-    </table>
+        </div>
+    </div>
+
+    <!-- GRADES TABLE -->
+    <div class="col-lg-7">
+        <div class="modern-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-table me-2 text-success"></i>Grade Records
+                </h5>
+                <span class="badge-m badge-info-m">@grades.Count entries</span>
+            </div>
+
+            @if (grades.Count == 0)
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox display-4 text-muted opacity-50"></i>
+                    <p class="text-muted mt-3">No grades submitted yet.</p>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Course</th>
+                                <th>Marks</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var g in grades)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-circle avatar-blue">
+                                                @(g.StudentEmail?.Substring(0,1).ToUpper() ?? "S")
+                                            </div>
+                                            <span class="small">@g.StudentEmail</span>
+                                        </div>
+                                    </td>
+                                    <td><span class="fw-medium">@g.CourseName</span></td>
+                                    <td><strong>@g.Marks</strong>/100</td>
+                                    <td>
+                                        <span class="badge-m @GetGradeBadge(g.Grade)">@g.Grade</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+<style>
+    .badge-info-m { background: #dbeafe; color: #1e40af; }
+</style>
 
 @code {
-
     StudentGrade grade = new StudentGrade();
     List<StudentGrade> grades = new();
     private List<Course> facultyCourses = new();
@@ -88,45 +141,50 @@
     protected override void OnInitialized()
     {
         var faculty = UserService.GetCurrentUser();
-
         if (faculty != null)
-        {
             facultyCourses = CourseService.GetCoursesByFaculty(faculty.Id);
-        }
-
         LoadGrades();
     }
 
     void LoadGrades()
     {
         var facultyEmail = UserService.LoggedInUser?.Email;
-
         grades = _context.StudentGrades
                          .Where(g => g.FacultyEmail == facultyEmail)
                          .ToList();
     }
 
-  void HandleValidSubmit()
-{
-    if (grade.Marks >= 90)
-        grade.Grade = "A+";
-    else if (grade.Marks >= 75)
-        grade.Grade = "A";
-    else if (grade.Marks >= 60)
-        grade.Grade = "B";
-    else if (grade.Marks >= 40)
-        grade.Grade = "C";
-    else
-        grade.Grade = "F";
+    async Task HandleValidSubmit()
+    {
+        if (grade.Marks >= 90) grade.Grade = "A+";
+        else if (grade.Marks >= 75) grade.Grade = "A";
+        else if (grade.Marks >= 60) grade.Grade = "B";
+        else if (grade.Marks >= 40) grade.Grade = "C";
+        else grade.Grade = "F";
 
-    grade.FacultyEmail = UserService.LoggedInUser?.Email;
+        grade.FacultyEmail = UserService.LoggedInUser?.Email;
 
-    // 1️⃣ Save grade
-    _context.StudentGrades.Add(grade);
-    _context.SaveChanges();
+        _context.StudentGrades.Add(grade);
+        _context.SaveChanges();
 
-    successMessage = "Grade added successfully!";
-    grade = new StudentGrade();
-    LoadGrades();
-}
+        await NotificationService.AddNotificationAsync(
+            "Student",
+            "Grade Published",
+            $"Your grade for {grade.CourseName} has been published.",
+            "Grade",
+            "/student/grades"
+        );
+
+        successMessage = "Grade submitted successfully!";
+        grade = new StudentGrade();
+        LoadGrades();
+    }
+
+    private string GetGradeBadge(string? g) => g switch
+    {
+        "A+" or "A" => "badge-success-m",
+        "B"         => "badge-info-m",
+        "C"         => "badge-warning-m",
+        _           => "badge-danger-m"
+    };
 }

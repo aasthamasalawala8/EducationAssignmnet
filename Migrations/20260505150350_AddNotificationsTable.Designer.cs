@@ -4,6 +4,7 @@ using EducationAssignmentPortal.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EducationAssignmentPortal.Migrations
 {
     [DbContext(typeof(AppDBContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505150350_AddNotificationsTable")]
+    partial class AddNotificationsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -57,7 +60,7 @@ namespace EducationAssignmentPortal.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Assignments", (string)null);
+                    b.ToTable("Assignments");
                 });
 
             modelBuilder.Entity("EducationAssignmentPortal.Models.Course", b =>
@@ -83,7 +86,7 @@ namespace EducationAssignmentPortal.Migrations
 
                     b.HasIndex("FacultyId");
 
-                    b.ToTable("Courses", (string)null);
+                    b.ToTable("Courses");
                 });
 
             modelBuilder.Entity("EducationAssignmentPortal.Models.Notification", b =>
@@ -124,7 +127,7 @@ namespace EducationAssignmentPortal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notifications", (string)null);
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("EducationAssignmentPortal.Models.StudentGrade", b =>
@@ -155,7 +158,7 @@ namespace EducationAssignmentPortal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StudentGrades", (string)null);
+                    b.ToTable("StudentGrades");
                 });
 
             modelBuilder.Entity("EducationAssignmentPortal.Models.User", b =>
@@ -187,7 +190,7 @@ namespace EducationAssignmentPortal.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("EducationAssignmentPortal.Models.Assignment", b =>

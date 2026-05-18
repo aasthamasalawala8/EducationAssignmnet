@@ -16,6 +16,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped<UserService>(); // instance per user session
 builder.Services.AddScoped<AssignmentService>();
 builder.Services.AddScoped<CourseService>();
+builder.Services.AddScoped<NotificationService>();
 
 // Authentication & Authorization
 builder.Services.AddAuthentication();

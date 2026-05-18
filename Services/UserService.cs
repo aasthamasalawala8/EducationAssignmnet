@@ -10,25 +10,45 @@ namespace EducationAssignmentPortal.Services
         private readonly AppDBContext _context;
 
         public User? LoggedInUser { get; set; }
-        //private string? _currentUserEmail;
 
         public UserService(AppDBContext context)
         {
             _context = context;
         }
 
-        // ✅ REGISTER
         public async Task Register(User user)
         {
             var passwordHasher = new PasswordHasher<User>();
-
             user.Password = passwordHasher.HashPassword(user, user.Password);
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            if (user.Role == "Student")
+            {
+                var assignments = await _context.Assignments.ToListAsync();
+
+                foreach (var assignment in assignments)
+                {
+                    bool exists = await _context.StudentAssignments.AnyAsync(sa =>
+                        sa.StudentId == user.Id &&
+                        sa.AssignmentId == assignment.Id);
+
+                    if (!exists)
+                    {
+                        _context.StudentAssignments.Add(new StudentAssignment
+                        {
+                            StudentId = user.Id,
+                            AssignmentId = assignment.Id,
+                            Status = "Pending"
+                        });
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+            }
         }
 
-        // ✅ LOGIN
         public async Task<User?> ValidateUser(string? email, string? password)
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -82,26 +102,9 @@ namespace EducationAssignmentPortal.Services
             }
         }
 
-        // ✅ Get Current Logged-in User
         public User? GetCurrentUser()
         {
             return LoggedInUser;
         }
-
-        //public string GetCurrentUserEmail()
-        //{
-        //    return _currentUserEmail ?? string.Empty;
-        //}
-
-        //public void SetCurrentUserEmail(string email)
-        //{
-        //    _currentUserEmail = email;
-        //}
-
-
-
-
     }
 }
-
-

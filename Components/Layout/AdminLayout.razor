@@ -7,25 +7,37 @@
 
     <!-- Sidebar -->
     <div class="admin-sidebar">
-        <h4 class="admin-title">Admin Panel</h4>
+        <div class="admin-title">
+            <div class="brand-icon">
+                <i class="bi bi-mortarboard-fill text-white"></i>
+            </div>
+            <span>EduAssign</span>
+        </div>
+
+        <div class="sidebar-section-label">Main Menu</div>
 
         <nav class="admin-nav">
-            <NavLink href="/admin/courses" class="admin-link">
-                <i class="bi bi-mortarboard me-2"></i> Courses
+            <NavLink href="/admin-dashboard" class="admin-link" Match="NavLinkMatch.All">
+                <i class="bi bi-speedometer2"></i> Dashboard
             </NavLink>
 
-            <NavLink href="/admin/reports" class="admin-link">
-                <i class="bi bi-graph-up me-2"></i> Reports
+            <NavLink href="/admin/courses" class="admin-link">
+                <i class="bi bi-mortarboard"></i> Courses
             </NavLink>
 
             <NavLink href="/admin/users" class="admin-link">
-                <i class="bi bi-people me-2"></i> Users
+                <i class="bi bi-people"></i> Users
             </NavLink>
 
-             <button class="btn btn-danger mt-3"
-			@onclick="ShowLogoutConfirmation">
-        Logout
-    </button>
+            <NavLink href="/admin/reports" class="admin-link">
+                <i class="bi bi-graph-up"></i> Reports
+            </NavLink>
+
+            <hr class="sidebar-divider" />
+
+            <button class="sidebar-logout-btn" @onclick="ShowLogoutConfirmation">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
         </nav>
     </div>
 
@@ -36,9 +48,9 @@
 
 </div>
 
-<ConfirmationModal 
-    IsVisible="isLogoutConfirmVisible" 
-    Title="Logout Confirmation" 
+<ConfirmationModal
+    IsVisible="isLogoutConfirmVisible"
+    Title="Logout Confirmation"
     Message="Are you sure you want to logout?"
     YesButtonText="Yes"
     NoButtonText="No"
@@ -58,10 +70,8 @@
         isLogoutConfirmVisible = false;
         var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
         await customAuthStateProvider.UpdateAuthenticationState(null);
-        Navigation.NavigateTo("/login?logout=true"); // Redirect to login page after logout
+        Navigation.NavigateTo("/login?logout=true");
     }
 
-    // Keep the original Logout method for compatibility (though renamed to PerformLogout)
     async Task Logout() => await PerformLogout();
 }
-

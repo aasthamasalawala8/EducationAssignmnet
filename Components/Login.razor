@@ -13,145 +13,275 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <style>
-    body {
-        margin: 0;
-    }
+    body { margin: 0; }
 
     .login-wrapper {
         height: 100vh;
         display: flex;
+        font-family: 'Inter', 'Segoe UI', sans-serif;
     }
 
-    /* LEFT SIDE */
     .left-panel {
-        width: 50%;
-        background: linear-gradient(135deg, #4e73df, #224abe);
+        width: 55%;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 60%, #a855f7 100%);
         color: white;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: 40px;
+        padding: 60px;
+        position: relative;
+        overflow: hidden;
     }
-
-    .left-panel h1 {
-        font-size: 40px;
-        font-weight: bold;
+    .left-panel::before {
+        content: '';
+        position: absolute;
+        top: -20%;
+        right: -10%;
+        width: 400px;
+        height: 400px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.06);
+        pointer-events: none;
     }
-
-    .left-panel p {
-        margin-top: 15px;
-        font-size: 18px;
+    .left-panel::after {
+        content: '';
+        position: absolute;
+        bottom: -15%;
+        left: -8%;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.05);
+        pointer-events: none;
+    }
+    .left-brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 40px;
+        z-index: 1;
+    }
+    .left-brand-icon {
+        width: 56px;
+        height: 56px;
+        background: rgba(255,255,255,0.18);
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        backdrop-filter: blur(4px);
+    }
+    .left-brand h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.03em;
+    }
+    .left-tagline {
+        font-size: 1.05rem;
         text-align: center;
-        max-width: 350px;
+        max-width: 380px;
+        opacity: 0.85;
+        line-height: 1.7;
+        z-index: 1;
+        margin-bottom: 40px;
     }
+    .left-features {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        z-index: 1;
+        width: 100%;
+        max-width: 340px;
+    }
+    .left-feature-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 12px;
+        padding: 12px 16px;
+        backdrop-filter: blur(4px);
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    .left-feature-item i { font-size: 1.1rem; opacity: 0.9; }
 
-    /* RIGHT SIDE */
     .right-panel {
-        width: 50%;
+        width: 45%;
         display: flex;
         justify-content: center;
         align-items: center;
-        background-color: #f8f9fc;
+        background: #f8fafc;
+        padding: 40px;
     }
-
     .login-card {
-        width: 350px;
-        padding: 30px;
-        border-radius: 15px;
+        width: 100%;
+        max-width: 400px;
         background: white;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 2.5rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        border: 1px solid #e2e8f0;
     }
-
-    .login-title {
+    .login-card-header {
         text-align: center;
-        font-weight: 600;
-        margin-bottom: 20px;
-        color: #4e73df;
+        margin-bottom: 2rem;
     }
-
-    .form-control {
+    .login-card-header h2 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+    .login-card-header p {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin: 0;
+    }
+    .form-field { margin-bottom: 1.1rem; }
+    .form-field label {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+    }
+    .form-field .form-control {
         border-radius: 10px;
+        border: 1.5px solid #e2e8f0;
+        padding: 0.65rem 0.9rem;
+        font-size: 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        width: 100%;
     }
-
+    .form-field .form-control:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 3px rgba(79,70,229,0.15);
+        outline: none;
+    }
     .btn-login {
-        background-color: #4e73df;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
         color: white;
+        border: none;
         border-radius: 10px;
-        font-weight: 500;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 0.75rem;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
     }
-
     .btn-login:hover {
-        background-color: #224abe;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79,70,229,0.35);
+        filter: brightness(1.05);
     }
-    .register-link {
-    color: #4e73df;
-    font-weight: 500;
-    text-decoration: none;
-}
+    .login-footer {
+        text-align: center;
+        margin-top: 1.25rem;
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+    .login-footer a {
+        color: #4f46e5;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .login-footer a:hover { text-decoration: underline; }
 
-.register-link:hover {
-    text-decoration: underline;
-}
+    @@media (max-width: 768px) {
+        .left-panel { display: none; }
+        .right-panel { width: 100%; padding: 24px; }
+    }
 </style>
 
 <div class="login-wrapper">
 
-    <!-- LEFT DESIGN SIDE -->
+    <!-- LEFT PANEL -->
     <div class="left-panel">
-        <h1>EduAssign</h1>
-        <p>
-            Welcome to Education Assignment Portal.  
-            Manage assignments, submissions and dashboards easily.
+        <div class="left-brand">
+            <div class="left-brand-icon">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h1>EduAssign</h1>
+        </div>
+        <p class="left-tagline">
+            A modern education portal for managing assignments, tracking progress, and delivering results.
         </p>
+        <div class="left-features">
+            <div class="left-feature-item">
+                <i class="bi bi-journal-check"></i>
+                <span>Manage & submit assignments easily</span>
+            </div>
+            <div class="left-feature-item">
+                <i class="bi bi-graph-up-arrow"></i>
+                <span>Real-time progress tracking</span>
+            </div>
+            <div class="left-feature-item">
+                <i class="bi bi-bell"></i>
+                <span>Instant notifications & updates</span>
+            </div>
+        </div>
     </div>
 
-    <!-- RIGHT LOGIN SIDE -->
+    <!-- RIGHT PANEL -->
     <div class="right-panel">
         <div class="login-card">
 
-            <h4 class="login-title">Login</h4>
+            <div class="login-card-header">
+                <h2>Welcome back</h2>
+                <p>Sign in to your account to continue</p>
+            </div>
 
             <EditForm Model="@loginStudent" OnValidSubmit="HandleLogin">
-                
                 <DataAnnotationsValidator />
-                <ValidationSummary />
+                <ValidationSummary class="alert alert-danger mb-3" />
 
-                <div class="mb-3">
-                    <label>Email</label>
+                <div class="form-field">
+                    <label>Email address</label>
                     <InputText @bind-Value="loginStudent.Email"
                                class="form-control"
-                               placeholder="Enter your email" />
+                               placeholder="you@example.com" />
                 </div>
 
-                <div class="mb-3">
+                <div class="form-field">
                     <label>Password</label>
                     <InputText type="password"
                                @bind-Value="loginStudent.Password"
                                class="form-control"
-                               placeholder="Enter your password" />
+                               placeholder="••••••••" />
                 </div>
 
-                <button type="submit" class="btn btn-login w-100">
-                    Login
+                <button type="submit" class="btn-login">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign In
                 </button>
-                <div class="text-center mt-3">
-                    <span style="font-size:14px;">Don't have an account?</span>
-                    <a href="/register" class="register-link"> Register</a>
+
+                <div class="login-footer">
+                    Don't have an account? <a href="/register">Register</a>
                 </div>
             </EditForm>
 
             @if (!string.IsNullOrEmpty(errorMessage))
             {
-                <div class="alert alert-danger mt-3 text-center">
-                    @errorMessage
+                <div class="alert alert-danger mt-3 text-center" style="border-radius:10px;">
+                    <i class="bi bi-exclamation-circle me-1"></i> @errorMessage
                 </div>
             }
 
             @if (showLogoutMessage)
             {
-                <div class="alert alert-success text-center">
-                    You have been logged out successfully.
+                <div class="alert alert-success mt-3 text-center" style="border-radius:10px;">
+                    <i class="bi bi-check-circle me-1"></i> You have been logged out successfully.
                 </div>
             }
 
@@ -176,7 +306,7 @@
 
     private async Task HandleLogin()
     {
-        errorMessage = null; 
+        errorMessage = null;
         try
         {
             var user = await UserService.ValidateUser(loginStudent.Email, loginStudent.Password);
@@ -192,7 +322,6 @@
                 var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
                 await customAuthStateProvider.UpdateAuthenticationState(user);
 
-                // Handle ReturnUrl
                 var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(Navigation.ToAbsoluteUri(Navigation.Uri).Query);
                 if (queryParams.TryGetValue("ReturnUrl", out var returnUrl))
                 {
@@ -215,7 +344,7 @@
             }
             else
             {
-                errorMessage = "Invalid Email or Password";
+                errorMessage = "Invalid email or password. Please try again.";
             }
         }
         catch (Exception ex)

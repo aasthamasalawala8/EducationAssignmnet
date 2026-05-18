@@ -13,54 +13,83 @@
 @inject AssignmentService AssignmentService
 @inject CourseService CourseService
 @inject NavigationManager Navigation
+@inject NotificationService NotificationService
 
-<div class="container mt-4">
-    <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
-            <h3 class="mb-0">Add Assignment</h3>
-        </div>
-        <div class="card-body">
+<div class="page-header">
+    <h2><i class="bi bi-plus-circle me-2 text-primary"></i>New Assignment</h2>
+    <p>Create and publish a new assignment for your students</p>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="modern-card">
+
             <EditForm Model="@assignment" OnValidSubmit="HandleSubmit">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="text-danger" />
+                <ValidationSummary class="alert alert-danger mb-4" />
 
-                <!-- COURSE DROPDOWN -->
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Select Course:</label>
+                <!-- COURSE -->
+                <div class="mb-4">
+                    <label class="form-label">Select Course</label>
                     <InputSelect class="form-select" @bind-Value="assignment.CourseId">
-                        <option value="0">-- Select Course --</option>
+                        <option value="0">— Choose a course —</option>
                         @foreach (var course in courses)
                         {
                             <option value="@course.Id">@course.CourseName (@course.CourseCode)</option>
                         }
                     </InputSelect>
-                    <ValidationMessage For="@(() => assignment.CourseId)" />
+                    <ValidationMessage For="@(() => assignment.CourseId)" class="validation-message" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Assignment Title:</label>
-                    <InputText class="form-control" @bind-Value="assignment.Title" placeholder="Enter assignment title" />
-                    <ValidationMessage For="@(() => assignment.Title)" />
+                <!-- TITLE -->
+                <div class="mb-4">
+                    <label class="form-label">Assignment Title</label>
+                    <InputText class="form-control" @bind-Value="assignment.Title"
+                               placeholder="e.g. Lab Report 3 – Data Structures" />
+                    <ValidationMessage For="@(() => assignment.Title)" class="validation-message" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Description:</label>
-                    <InputTextArea class="form-control" @bind-Value="assignment.Description" rows="4" placeholder="Enter assignment details" />
-                    <ValidationMessage For="@(() => assignment.Description)" />
+                <!-- DESCRIPTION -->
+                <div class="mb-4">
+                    <label class="form-label">Description</label>
+                    <InputTextArea class="form-control" @bind-Value="assignment.Description"
+                                   rows="5" placeholder="Provide full assignment details, requirements, and instructions..." />
+                    <ValidationMessage For="@(() => assignment.Description)" class="validation-message" />
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Due Date:</label>
+                <!-- DUE DATE -->
+                <div class="mb-4">
+                    <label class="form-label">Due Date</label>
                     <InputDate class="form-control" @bind-Value="assignment.DueDate" />
-                    <ValidationMessage For="@(() => assignment.DueDate)" />
+                    <ValidationMessage For="@(() => assignment.DueDate)" class="validation-message" />
                 </div>
 
-                <div class="d-grid mt-4">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        <i class="bi bi-check-circle me-2"></i> Create Assignment
+                <div class="d-flex gap-3 mt-2">
+                    <button type="submit" class="btn btn-modern btn-primary-m flex-fill">
+                        <i class="bi bi-check-circle"></i> Publish Assignment
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-modern"
+                            @onclick='() => Navigation.NavigateTo("/faculty/dashboard")'>
+                        <i class="bi bi-x"></i> Cancel
                     </button>
                 </div>
+
             </EditForm>
+        </div>
+    </div>
+
+    <!-- Tip card -->
+    <div class="col-lg-3">
+        <div class="modern-card" style="background:#f5f3ff; border-color:#ddd6fe;">
+            <h6 class="fw-bold mb-3" style="color:#5b21b6;">
+                <i class="bi bi-lightbulb me-2"></i>Tips
+            </h6>
+            <ul class="list-unstyled mb-0" style="font-size:0.85rem; color:#4c1d95; line-height:1.8;">
+                <li><i class="bi bi-check2 me-2 text-success"></i>Set a realistic due date</li>
+                <li><i class="bi bi-check2 me-2 text-success"></i>Write a clear description</li>
+                <li><i class="bi bi-check2 me-2 text-success"></i>Select the correct course</li>
+                <li><i class="bi bi-check2 me-2 text-success"></i>Students get notified instantly</li>
+            </ul>
         </div>
     </div>
 </div>
@@ -92,15 +121,20 @@
 
     async Task HandleSubmit()
     {
-        if (assignment.CourseId == 0)
-        {
-            // Optional: Handle validation for course not selected if not already handled by DataAnnotations
-            return;
-        }
+        if (assignment.CourseId == 0) return;
 
         assignment.FacultyEmail = facultyEmail;
+
         await AssignmentService.AddAssignmentAsync(assignment);
-        
+
+        await NotificationService.AddNotificationAsync(
+            "Student",
+            "New Assignment Added",
+            $"{assignment.Title} has been uploaded by faculty.",
+            "Assignment",
+            "/student/assignments"
+        );
+
         Navigation.NavigateTo("/faculty/dashboard");
     }
 }
